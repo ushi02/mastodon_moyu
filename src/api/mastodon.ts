@@ -1,6 +1,6 @@
 // Mastodon REST API client
 
-import { DEFAULT_CONFIG, type AppConfig, type MastodonCustomEmoji, type MastodonStatus } from './types';
+import { DEFAULT_CONFIG, type AppConfig, type MastodonCustomEmoji, type MastodonStatus } from './types.ts';
 
 /**
  * Fetch the timeline from a Mastodon instance.

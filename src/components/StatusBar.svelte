@@ -4,7 +4,7 @@
    * timeline mode, and opacity control.
    */
   import { createEventDispatcher } from 'svelte';
-  import { persistedState, updateConfig, refreshTimeline, startAutoRefresh } from '../stores';
+  import { persistedState, t, updateConfig, refreshTimeline, startAutoRefresh } from '../stores';
 
   const dispatch = createEventDispatcher();
 
@@ -41,20 +41,20 @@
     </span>
   </div>
   <div class="statusbar-center">
-    <div class="timeline-toggle" role="tablist" aria-label="时间线切换">
+    <div class="timeline-toggle" role="tablist" aria-label={$t('statusBar.timelineSwitch')}>
       <button
         class:active={config.timelineType === 'public'}
         class="toggle-btn"
         on:click={() => handleTimelineChange('public')}
       >
-        Public
+        {$t('common.public')}
       </button>
       <button
         class:active={config.timelineType === 'home'}
         class="toggle-btn"
         on:click={() => handleTimelineChange('home')}
       >
-        Home
+        {$t('common.home')}
       </button>
     </div>
   </div>
@@ -63,7 +63,7 @@
       <button
         type="button"
         class="settings-toggle"
-        title="设置"
+        title={$t('common.settings')}
         on:click={() => dispatch('settings')}
       >
         ⚙
@@ -71,12 +71,14 @@
       <button
         type="button"
         class="theme-toggle"
-        title={config.themeMode === 'dark' ? '切换到 Light' : '切换到 Dark'}
+        title={config.themeMode === 'dark'
+          ? $t('statusBar.switchToLight')
+          : $t('statusBar.switchToDark')}
         on:click={toggleThemeMode}
       >
         {config.themeMode === 'dark' ? '◐' : '◑'}
       </button>
-      <label class="opacity-control" title="透明度">
+      <label class="opacity-control" title={$t('statusBar.opacity')}>
       <input
         type="range"
         min="0.2"

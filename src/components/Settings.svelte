@@ -2,7 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { get } from 'svelte/store';
   import { DEFAULT_CONFIG } from '../api';
-  import { persistedState, updateConfig } from '../stores';
+  import { localeOptions, persistedState, t, updateConfig, type Locale } from '../stores';
 
   export let mode: 'setup' | 'settings' = 'settings';
   export let initialSection: 'account' | 'appearance' | 'help' = 'account';
@@ -28,6 +28,7 @@
   let accessToken = initialConfig.accessToken;
   let timelineType = initialConfig.timelineType;
   let themeMode = initialConfig.themeMode;
+  let locale: Locale = initialConfig.locale;
   let globalShortcut = initialConfig.globalShortcut;
   let fontScale = initialConfig.fontScale;
   let accentColor = initialConfig.accentColor;
@@ -40,6 +41,7 @@
   $: if (activeSection === 'appearance') {
     updateConfig({
       themeMode,
+      locale,
       fontScale,
       accentColor,
     });
@@ -57,13 +59,13 @@
 
     const normalizedInstanceUrl = normalizeInstanceUrl(instanceUrl);
     if (!normalizedInstanceUrl) {
-      validationMessage = '需要先填一个实例地址。';
+      validationMessage = get(t)('settings.validationInstance');
       activeSection = 'account';
       return;
     }
 
     if (timelineType === 'home' && !accessToken.trim()) {
-      validationMessage = '主页时间线需要 Access Token。你也可以先切到 Public 模式开始用。';
+      validationMessage = get(t)('settings.validationToken');
       activeSection = 'account';
       return;
     }
@@ -73,6 +75,7 @@
       accessToken: accessToken.trim(),
       timelineType,
       themeMode,
+      locale,
       globalShortcut: globalShortcut.trim(),
       fontScale,
       accentColor,
@@ -140,35 +143,35 @@
   <div class="settings-modal">
     <div class="settings-header">
       <div>
-        <h2>{isSetupMode ? '初始' : ''}</h2>
+        <h2>{isSetupMode ? $t('settings.setupTitle') : ''}</h2>
       </div>
       {#if showCloseButton}
-        <button class="close-btn" on:click={handleCancel}>✕</button>
+        <button class="close-btn" on:click={handleCancel} aria-label={$t('common.close')}>✕</button>
       {/if}
     </div>
 
     <div class="settings-layout">
-      <aside class="settings-sidebar" aria-label="设置栏目">
+      <aside class="settings-sidebar" aria-label={$t('settings.sectionsLabel')}>
         <button
           class:active={activeSection === 'account'}
           class="tab-btn"
           on:click={() => (activeSection = 'account')}
         >
-          账号
+          {$t('settings.account')}
         </button>
         <button
           class:active={activeSection === 'appearance'}
           class="tab-btn"
           on:click={() => (activeSection = 'appearance')}
         >
-          外观
+          {$t('settings.appearance')}
         </button>
         <button
           class:active={activeSection === 'help'}
           class="tab-btn"
           on:click={() => (activeSection = 'help')}
         >
-          教程
+          {$t('settings.help')}
         </button>
       </aside>
 
@@ -176,11 +179,11 @@
       {#if activeSection === 'account'}
         <section class="panel-section">
           <div class="section-heading">
-            <h3>账号登录</h3>
+            <h3>{$t('settings.accountTitle')}</h3>
           </div>
 
           <div class="form-group">
-            <label for="instanceUrl">实例地址</label>
+            <label for="instanceUrl">{$t('settings.instanceUrl')}</label>
             <input
               id="instanceUrl"
               type="url"
@@ -190,10 +193,11 @@
           </div>
 
           <div class="token-guide">
-            <h4>Token 获取步骤</h4>
-            <p>2. 进入 `Preferences -> Development -> New Application`。</p>
-            <p>3. 填写应用名称等信息，并把 Scopes 至少勾上 `read`。</p>
-            <p>4. 创建应用后点进该应用详情页，再复制 Access Token 粘回这里。</p>
+            <h4>{$t('settings.tokenGuideTitle')}</h4>
+            <p>{$t('settings.tokenGuide1')}</p>
+            <p>{$t('settings.tokenGuide2')}</p>
+            <p>{$t('settings.tokenGuide3')}</p>
+            <p>{$t('settings.tokenGuide4')}</p>
           </div>
 
           <div class="form-group">
@@ -203,44 +207,48 @@
                 id="accessToken"
                 type={isAccessTokenVisible ? 'text' : 'password'}
                 bind:value={accessToken}
-                placeholder="填入后可查看 Home 时间线"
+                placeholder={$t('settings.accessTokenPlaceholder')}
               />
               <button
                 type="button"
                 class="visibility-toggle"
                 on:click={() => (isAccessTokenVisible = !isAccessTokenVisible)}
-                aria-label={isAccessTokenVisible ? '隐藏 token' : '显示 token'}
-                title={isAccessTokenVisible ? '隐藏 token' : '显示 token'}
+                aria-label={isAccessTokenVisible ? $t('settings.hideToken') : $t('settings.showToken')}
+                title={isAccessTokenVisible ? $t('settings.hideToken') : $t('settings.showToken')}
               >
-                {isAccessTokenVisible ? '隐藏' : '显示'}
+                {isAccessTokenVisible ? $t('settings.hide') : $t('settings.show')}
               </button>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="globalShortcut">一键开关快捷键</label>
+            <label for="globalShortcut">{$t('shortcuts.label')}</label>
             <div class:shortcut-recorder={true} class:recording={isRecordingShortcut}>
               <input
                 id="globalShortcut"
                 type="text"
                 readonly
                 bind:value={globalShortcut}
-                placeholder="点击这里后，直接按组合键"
+                placeholder={$t('shortcuts.placeholder')}
                 on:focus={() => (isRecordingShortcut = true)}
                 on:blur={() => (isRecordingShortcut = false)}
                 on:keydown={handleShortcutKeydown}
               />
-              <span class="recorder-chip">{isRecordingShortcut ? '录制中' : '快捷键'}</span>
+              <span class="recorder-chip"
+                >{isRecordingShortcut ? $t('shortcuts.recording') : $t('shortcuts.idle')}</span
+              >
             </div>
             <div class="inline-actions">
               <span class="help-text">
                 {#if isRecordingShortcut}
-                  现在直接按你想要的组合键；`Esc` 取消，`Backspace` 清空。
+                  {$t('shortcuts.recordingHint')}
                 {:else}
-                  默认是 `{DEFAULT_CONFIG.globalShortcut}`。点输入框后直接按组合键即可。
+                  {$t('shortcuts.idleHint', { shortcut: DEFAULT_CONFIG.globalShortcut })}
                 {/if}
               </span>
-              <button type="button" class="text-btn" on:click={resetShortcutToDefault}>恢复默认</button>
+              <button type="button" class="text-btn" on:click={resetShortcutToDefault}
+                >{$t('shortcuts.reset')}</button
+              >
             </div>
           </div>
 
@@ -253,31 +261,40 @@
       {#if activeSection === 'appearance'}
         <section class="panel-section">
           <div class="section-heading">
-            <h3>外观调节</h3>
+            <h3>{$t('settings.appearanceTitle')}</h3>
           </div>
 
           <div class="form-group">
-            <span class="form-label">界面模式</span>
-            <div class="radio-group" role="radiogroup" aria-label="界面模式">
+            <label for="locale">{$t('settings.languageLabel')}</label>
+            <select id="locale" bind:value={locale}>
+              {#each localeOptions as option}
+                <option value={option.value}>{$t(option.labelKey)}</option>
+              {/each}
+            </select>
+          </div>
+
+          <div class="form-group">
+            <span class="form-label">{$t('settings.themeMode')}</span>
+            <div class="radio-group" role="radiogroup" aria-label={$t('settings.themeMode')}>
               <label class="radio-card">
                 <input type="radio" bind:group={themeMode} value="dark" />
                 <div>
-                  <strong>Dark</strong>
-                  <span>适合低调摸鱼，减少刺眼感</span>
+                  <strong>{$t('common.dark')}</strong>
+                  <span>{$t('settings.darkDescription')}</span>
                 </div>
               </label>
               <label class="radio-card">
                 <input type="radio" bind:group={themeMode} value="light" />
                 <div>
-                  <strong>Light</strong>
-                  <span>提高对比度，文字更清楚</span>
+                  <strong>{$t('common.light')}</strong>
+                  <span>{$t('settings.lightDescription')}</span>
                 </div>
               </label>
             </div>
           </div>
 
           <div class="form-group">
-            <label for="fontScale">字体大小</label>
+            <label for="fontScale">{$t('settings.fontScale')}</label>
             <div class="range-row">
               <input
                 id="fontScale"
@@ -292,7 +309,7 @@
           </div>
 
           <div class="form-group">
-            <span class="form-label">主题色</span>
+            <span class="form-label">{$t('settings.accentColor')}</span>
             <div class="accent-grid">
               {#each accentPresets as preset}
                 <button
@@ -315,22 +332,22 @@
       {#if activeSection === 'help'}
         <section class="panel-section">
           <div class="section-heading">
-            <h3>快速教程</h3>
+            <h3>{$t('settings.helpTitle')}</h3>
           </div>
 
           <div class="help-grid">
             <article class="help-card">
-              <h4>打开 / 关闭</h4>
-              <p>全局快捷键：不切回 app 也能一键开关。</p>
-              <p>默认是 `⌘D`，也可以设置 -> 账 -> 一键开关快捷键里改成别的组合。</p>
+              <h4>{$t('settings.openCloseTitle')}</h4>
+              <p>{$t('settings.openClose1')}</p>
+              <p>{$t('settings.openClose2')}</p>
             </article>
 
             <article class="help-card">
-              <h4>阅读操作</h4>
-              <p>`j` / `k`：向下或向上滚动。</p>
-              <p>`d` / `u`：向下或向上跳半页。</p>
-              <p>`↑` / `↓`：细一点地滚动。</p>
-              <p>`gg`：回到顶部，`G`：到最底，`r`：刷新时间线。</p>
+              <h4>{$t('settings.readingTitle')}</h4>
+              <p>{$t('settings.reading1')}</p>
+              <p>{$t('settings.reading2')}</p>
+              <p>{$t('settings.reading3')}</p>
+              <p>{$t('settings.reading4')}</p>
             </article>
           </div>
         </section>
@@ -344,10 +361,10 @@
 
     <div class="settings-footer">
       {#if showCloseButton}
-        <button class="btn btn-secondary" on:click={handleCancel}>取消</button>
+        <button class="btn btn-secondary" on:click={handleCancel}>{$t('common.cancel')}</button>
       {/if}
       <button class="btn btn-primary" on:click={handleSave}>
-        {isSetupMode ? '保存并开始摸鱼' : '保存并刷新'}
+        {isSetupMode ? $t('common.saveAndStart') : $t('common.saveAndRefresh')}
       </button>
     </div>
   </div>
@@ -478,12 +495,14 @@
   }
 
   input[type="url"],
+  select,
   input[type="password"],
   input[type="range"] {
     width: 100%;
   }
 
   input[type="url"],
+  select,
   input[type="password"] {
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid var(--border);
@@ -563,6 +582,7 @@
   }
 
   input[type="url"]:focus,
+  select:focus,
   input[type="password"]:focus {
     border-color: var(--accent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 18%, transparent);

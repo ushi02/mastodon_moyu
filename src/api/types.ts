@@ -37,6 +37,7 @@ export interface AppConfig {
   accessToken: string;
   timelineType: 'public' | 'home';
   themeMode: 'dark' | 'light';
+  locale: 'zh-CN' | 'en' | 'ja';
   globalShortcut: string;
   refreshInterval: number; // seconds
   opacity: number; // 0.0 - 1.0
@@ -50,6 +51,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   accessToken: '',
   timelineType: 'home',
   themeMode: 'dark',
+  locale: 'zh-CN',
   globalShortcut: 'CommandOrControl+D',
   refreshInterval: 60,
   opacity: 0.85,

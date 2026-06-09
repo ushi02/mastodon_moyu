@@ -6,7 +6,7 @@
   import { onDestroy, tick } from 'svelte';
   import StatusItem from './StatusItem.svelte';
   import { statuses, isLoading, isLoadingMore, canLoadMore, error, loadMoreTimeline } from '../stores';
-  import { persistedState, updatePersistedState } from '../stores';
+  import { persistedState, t, updatePersistedState } from '../stores';
 
   let scrollContainer: HTMLDivElement;
   let scrollSaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -212,7 +212,7 @@
 
   {#if $isLoading && $statuses.length === 0}
     <div class="timeline-loading">
-      <span class="loading-dots">fetching<span class="dots">...</span></span>
+      <span class="loading-dots">{$t('timeline.fetching')}<span class="dots">...</span></span>
     </div>
   {/if}
 
@@ -229,15 +229,19 @@
         on:click={() => loadMoreTimeline()}
         disabled={$isLoadingMore || !$canLoadMore}
       >
-        {$isLoadingMore ? 'loading…' : $canLoadMore ? 'load more' : 'no more posts'}
+        {$isLoadingMore
+          ? $t('timeline.loadingMore')
+          : $canLoadMore
+            ? $t('timeline.loadMore')
+            : $t('timeline.noMorePosts')}
       </button>
     </div>
   {/if}
 
   {#if !$isLoading && $statuses.length === 0 && !$error}
     <div class="timeline-empty">
-      <div>no posts yet</div>
-      <div class="empty-hint">press r to refresh</div>
+      <div>{$t('timeline.noPosts')}</div>
+      <div class="empty-hint">{$t('timeline.refreshHint')}</div>
     </div>
   {/if}
 </div>

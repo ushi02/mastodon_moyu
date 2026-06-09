@@ -5,6 +5,7 @@
    */
   import type { MastodonStatus } from '../api/types';
   import { applyCustomEmojis, renderMastodonHtml, formatTime } from '../api/mastodon';
+  import { t } from '../stores';
 
   export let status: MastodonStatus;
   let isContentRevealed = false;
@@ -34,7 +35,9 @@
   {#if isReblog}
     <div class="status-boost">
       <span class="boost-icon">⟲</span>
-      <span class="boost-user">{status.account.display_name || status.account.acct} boosted</span>
+      <span class="boost-user"
+        >{status.account.display_name || status.account.acct} {$t('statusItem.boosted')}</span
+      >
     </div>
   {/if}
 
@@ -65,7 +68,7 @@
     >
       <span class="cw-label">CW</span>
       <span class="cw-text rendered-inline">{@html spoilerTextHtml}</span>
-      <span class="cw-toggle">{isContentRevealed ? 'hide' : 'show'}</span>
+      <span class="cw-toggle">{isContentRevealed ? $t('statusItem.hide') : $t('statusItem.show')}</span>
     </button>
   {/if}
 

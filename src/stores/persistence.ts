@@ -23,6 +23,7 @@ function sanitizeConfig(config: Partial<AppConfig> | undefined): AppConfig {
     accessToken: typeof config?.accessToken === 'string' ? config.accessToken : DEFAULT_CONFIG.accessToken,
     timelineType: config?.timelineType === 'home' ? 'home' : 'public',
     themeMode: config?.themeMode === 'light' ? 'light' : 'dark',
+    locale: config?.locale === 'en' || config?.locale === 'ja' ? config.locale : 'zh-CN',
     globalShortcut:
       typeof config?.globalShortcut === 'string' && config.globalShortcut.trim()
         ? config.globalShortcut.trim()

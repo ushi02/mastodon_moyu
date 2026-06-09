@@ -9,7 +9,7 @@ pub fn run() {
         .setup(|app| {
             // Build system tray icon
             let _tray = TrayIconBuilder::new()
-                .tooltip("TouchFish — Mastodon 摸鱼")
+                .tooltip("TouchFish - Mastodon")
                 .icon(app.default_window_icon().unwrap().clone())
                 .on_tray_icon_event(|tray, event| {
                     if let tauri::tray::TrayIconEvent::Click {

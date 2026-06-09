@@ -20,3 +20,5 @@ export {
 } from './persistence';
 
 export type { PersistedState } from './persistence';
+export { locale, localeOptions, t, translate } from './i18n';
+export type { Locale } from './i18n';

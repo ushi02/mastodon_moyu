@@ -4,6 +4,7 @@
    * Integrates all components, keyboard shortcuts, and window management.
    */
   import { onMount, onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
   import { hide as hideApp, show as showApp } from '@tauri-apps/api/app';
   import { getCurrentWindow } from '@tauri-apps/api/window';
   import { LogicalSize, LogicalPosition } from '@tauri-apps/api/dpi';
@@ -20,6 +21,7 @@
     updatePersistedState,
     getConfig,
     error,
+    t,
   } from '../stores';
   import { isRegistered, register, unregister } from '@tauri-apps/plugin-global-shortcut';
   import { DEFAULT_CONFIG } from '../api';
@@ -40,6 +42,10 @@
   const defaultShortcut = DEFAULT_CONFIG.globalShortcut;
 
   $: applyTheme($persistedState.config);
+
+  function tt(key: string, params?: Record<string, string | number>) {
+    return get(t)(key, params);
+  }
 
   function applyTheme(config: typeof $persistedState.config) {
     if (typeof document === 'undefined') return;
@@ -128,7 +134,9 @@
               globalShortcut: defaultShortcut,
             },
           });
-          shortcutRegistrationError = `自定义快捷键不可用，已自动回退到默认：${defaultShortcut}`;
+          shortcutRegistrationError = tt('shortcuts.fallbackToDefault', {
+            shortcut: defaultShortcut,
+          });
           openSettings('settings', 'account');
           return;
         } catch (fallbackError) {
@@ -137,8 +145,10 @@
       }
 
       registeredShortcut = null;
-      shortcutRegistrationError = `默认快捷键 ${defaultShortcut} 也注册失败了。通常是和别的应用冲突，或 macOS 还没给全局快捷键相关权限。`;
-      shortcutWarning = '全局快捷键还没生效，先在设置里换一个不冲突的组合键。';
+      shortcutRegistrationError = tt('shortcuts.defaultRegistrationFailed', {
+        shortcut: defaultShortcut,
+      });
+      shortcutWarning = tt('shortcuts.warning');
       openSettings('settings', 'account');
     }
   }
@@ -335,8 +345,14 @@
   {#if shortcutWarning && !showSettings}
     <div class="app-banner">
       <span>{shortcutWarning}</span>
-      <button class="banner-action" on:click={() => openSettings('settings', 'account')}>去设置</button>
-      <button class="banner-close" on:click={() => (shortcutWarning = null)} aria-label="关闭提示">×</button>
+      <button class="banner-action" on:click={() => openSettings('settings', 'account')}
+        >{$t('banner.openSettings')}</button
+      >
+      <button
+        class="banner-close"
+        on:click={() => (shortcutWarning = null)}
+        aria-label={$t('banner.closeNotice')}>×</button
+      >
     </div>
   {/if}
   {#if showSettings}
