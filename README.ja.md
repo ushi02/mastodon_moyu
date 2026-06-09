@@ -4,6 +4,14 @@
 
 `TouchFish` は、Mastodon 向けに作られた目立ちにくいリーダーです。
 
+![TouchFish dark mode](./dark_demo.png)
+
+ダークモードのプレビュー
+
+![TouchFish light mode](./light_demo.png)
+
+ライトモードのプレビュー
+
 ## このアプリでできること
 
 こっそりタイムラインを見るのに向いた Mastodon リーダーです。

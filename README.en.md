@@ -4,6 +4,14 @@
 
 `TouchFish` is a low-profile reader designed for Mastodon.
 
+![TouchFish dark mode](./dark_demo.png)
+
+Dark mode preview
+
+![TouchFish light mode](./light_demo.png)
+
+Light mode preview
+
 ## What this app can do
 
 This is a Mastodon reader for quietly checking your timeline.

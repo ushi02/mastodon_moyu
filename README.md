@@ -4,6 +4,14 @@
 
 `TouchFish` 是一个为 Mastodon 设计的摸鱼阅读器。
 
+![TouchFish dark mode](./dark_demo.png)
+
+深色模式示意图
+
+![TouchFish light mode](./light_demo.png)
+
+浅色模式示意图
+
 
 ## 这个应用可以干嘛
 
@@ -85,4 +93,3 @@ Preferences -> Development -> New Application
 - 日本語
 
 你可以在设置页里切换界面语言。
-
