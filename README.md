@@ -1,4 +1,4 @@
-# mastodon_moyu
+# TouchFish
 
 [中文](./README.md) | [English](./README.en.md) | [日本語](./README.ja.md)
 
