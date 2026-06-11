@@ -18,12 +18,45 @@ export const statusCount = derived(statuses, ($s) => $s.length);
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
 let currentConfig: Partial<AppConfig> = {};
 
+function isSameTimelineContext(
+  previousConfig: Partial<AppConfig>,
+  nextConfig: Partial<AppConfig>
+): boolean {
+  const previous = { ...DEFAULT_CONFIG, ...previousConfig };
+  const next = { ...DEFAULT_CONFIG, ...nextConfig };
+
+  return (
+    previous.instanceUrl === next.instanceUrl &&
+    previous.timelineType === next.timelineType &&
+    previous.accessToken === next.accessToken
+  );
+}
+
+function mergeStatuses(
+  incomingStatuses: MastodonStatus[],
+  existingStatuses: MastodonStatus[]
+): MastodonStatus[] {
+  if (existingStatuses.length === 0) return incomingStatuses;
+
+  const merged = [...incomingStatuses];
+  const seenIds = new Set(incomingStatuses.map((status) => status.id));
+
+  for (const status of existingStatuses) {
+    if (!seenIds.has(status.id)) {
+      merged.push(status);
+    }
+  }
+
+  return merged;
+}
+
 /**
  * Fetch timeline and update stores.
  */
 export async function refreshTimeline(config: Partial<AppConfig> = {}): Promise<void> {
   const currentlyLoading = get(isLoading);
   if (currentlyLoading) return;
+  const previousConfig = currentConfig;
   currentConfig = config;
 
   isLoading.set(true);
@@ -31,7 +64,13 @@ export async function refreshTimeline(config: Partial<AppConfig> = {}): Promise<
 
   try {
     const data = await fetchTimeline(config);
-    statuses.set(data);
+    const existingStatuses = get(statuses);
+    const shouldReplaceStatuses =
+      existingStatuses.length === 0 || !isSameTimelineContext(previousConfig, config);
+
+    statuses.set(
+      shouldReplaceStatuses ? data : mergeStatuses(data, existingStatuses)
+    );
     canLoadMore.set(data.length >= ((config.limit ?? DEFAULT_CONFIG.limit)));
     lastFetchedAt.set(new Date());
   } catch (err) {

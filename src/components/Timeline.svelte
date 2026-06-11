@@ -3,7 +3,7 @@
    * Timeline — Scrollable timeline container.
    * Renders list of StatusItems with smooth scrolling and state.
    */
-  import { onDestroy, tick } from 'svelte';
+  import { afterUpdate, beforeUpdate, onDestroy, tick } from 'svelte';
   import StatusItem from './StatusItem.svelte';
   import { statuses, isLoading, isLoadingMore, canLoadMore, error, loadMoreTimeline } from '../stores';
   import { persistedState, t, updatePersistedState } from '../stores';
@@ -16,6 +16,7 @@
   let keyboardScrollPosition = 0;
   let keyboardScrollVelocity = 0;
   let pendingRefreshRestore = false;
+  let previousStatusIds: string[] = [];
 
   async function restoreScrollPosition() {
     if (!scrollContainer || hasRestoredScroll) return;
@@ -46,6 +47,14 @@
 
   $: if (scrollContainer && pendingRefreshRestore && $statuses.length > 0) {
     restoreCapturedAnchor();
+  }
+
+  function shouldPreserveScrollOnUpdate(nextStatusIds: string[]) {
+    if (!scrollContainer || previousStatusIds.length === 0 || nextStatusIds.length === 0) return false;
+    if (pendingRefreshRestore) return false;
+    if (previousStatusIds.length !== nextStatusIds.length) return true;
+
+    return previousStatusIds.some((id, index) => id !== nextStatusIds[index]);
   }
 
   function getTopVisibleAnchor() {
@@ -191,6 +200,17 @@
 
     keyboardScrollFrame = requestAnimationFrame(step);
   }
+
+  beforeUpdate(() => {
+    const nextStatusIds = $statuses.map((status) => status.id);
+    if (shouldPreserveScrollOnUpdate(nextStatusIds)) {
+      captureScrollAnchor();
+    }
+  });
+
+  afterUpdate(() => {
+    previousStatusIds = $statuses.map((status) => status.id);
+  });
 
   onDestroy(() => {
     if (scrollSaveTimer) clearTimeout(scrollSaveTimer);
