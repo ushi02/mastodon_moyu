@@ -6,7 +6,14 @@
   import { afterUpdate, beforeUpdate, onDestroy, tick } from 'svelte';
   import StatusItem from './StatusItem.svelte';
   import { statuses, isLoading, isLoadingMore, canLoadMore, error, loadMoreTimeline } from '../stores';
-  import { persistedState, t, updatePersistedState } from '../stores';
+  import {
+    persistedState,
+    t,
+    getConfig,
+    getTimelineStateKey,
+    getTimelineViewState,
+    updateTimelineViewState,
+  } from '../stores';
 
   let scrollContainer: HTMLDivElement;
   let scrollSaveTimer: ReturnType<typeof setTimeout> | null = null;
@@ -17,25 +24,35 @@
   let keyboardScrollVelocity = 0;
   let pendingRefreshRestore = false;
   let previousStatusIds: string[] = [];
+  let timelineStateKey = getTimelineStateKey(getConfig());
+
+  $: nextTimelineStateKey = getTimelineStateKey($persistedState.config);
+  $: if (nextTimelineStateKey !== timelineStateKey) {
+    timelineStateKey = nextTimelineStateKey;
+    hasRestoredScroll = false;
+    pendingRefreshRestore = false;
+    previousStatusIds = [];
+  }
 
   async function restoreScrollPosition() {
     if (!scrollContainer || hasRestoredScroll) return;
     await tick();
+    const timelineViewState = getTimelineViewState($persistedState.config);
 
-    if ($persistedState.topVisibleStatusId) {
+    if (timelineViewState.topVisibleStatusId) {
       const anchor = scrollContainer.querySelector<HTMLElement>(
-        `[data-status-id="${$persistedState.topVisibleStatusId}"]`
+        `[data-status-id="${timelineViewState.topVisibleStatusId}"]`
       );
 
       if (anchor) {
-        scrollContainer.scrollTop = anchor.offsetTop + $persistedState.topVisibleStatusOffset;
+        scrollContainer.scrollTop = anchor.offsetTop + timelineViewState.topVisibleStatusOffset;
         hasRestoredScroll = true;
         return;
       }
     }
 
-    if ($persistedState.scrollPosition > 0) {
-      scrollContainer.scrollTop = $persistedState.scrollPosition;
+    if (timelineViewState.scrollPosition > 0) {
+      scrollContainer.scrollTop = timelineViewState.scrollPosition;
     }
 
     hasRestoredScroll = true;
@@ -86,7 +103,7 @@
     scrollSaveTimer = setTimeout(() => {
       if (scrollContainer) {
         const topAnchor = getTopVisibleAnchor();
-        updatePersistedState({
+        updateTimelineViewState($persistedState.config, {
           scrollPosition: scrollContainer.scrollTop,
           topVisibleStatusId: topAnchor?.dataset.statusId,
           topVisibleStatusOffset: topAnchor
@@ -140,7 +157,7 @@
     if (!scrollContainer) return;
 
     const topAnchor = getTopVisibleAnchor();
-    updatePersistedState({
+    updateTimelineViewState($persistedState.config, {
       scrollPosition: scrollContainer.scrollTop,
       topVisibleStatusId: topAnchor?.dataset.statusId,
       topVisibleStatusOffset: topAnchor
@@ -153,8 +170,9 @@
   async function restoreCapturedAnchor() {
     if (!scrollContainer) return;
     await tick();
+    const timelineViewState = getTimelineViewState($persistedState.config);
 
-    const anchorId = $persistedState.topVisibleStatusId;
+    const anchorId = timelineViewState.topVisibleStatusId;
     if (!anchorId) {
       pendingRefreshRestore = false;
       return;
@@ -162,7 +180,7 @@
 
     const anchor = scrollContainer.querySelector<HTMLElement>(`[data-status-id="${anchorId}"]`);
     if (anchor) {
-      scrollContainer.scrollTop = anchor.offsetTop + $persistedState.topVisibleStatusOffset;
+      scrollContainer.scrollTop = anchor.offsetTop + timelineViewState.topVisibleStatusOffset;
     }
 
     pendingRefreshRestore = false;
