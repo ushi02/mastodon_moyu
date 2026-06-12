@@ -25,10 +25,12 @@
   let pendingRefreshRestore = false;
   let previousStatusIds: string[] = [];
   let timelineStateKey = getTimelineStateKey(getConfig());
+  let timelineConfig = getConfig();
 
   $: nextTimelineStateKey = getTimelineStateKey($persistedState.config);
   $: if (nextTimelineStateKey !== timelineStateKey) {
     timelineStateKey = nextTimelineStateKey;
+    timelineConfig = $persistedState.config;
     hasRestoredScroll = false;
     pendingRefreshRestore = false;
     previousStatusIds = [];
@@ -37,7 +39,7 @@
   async function restoreScrollPosition() {
     if (!scrollContainer || hasRestoredScroll) return;
     await tick();
-    const timelineViewState = getTimelineViewState($persistedState.config);
+    const timelineViewState = getTimelineViewState(timelineConfig);
 
     if (timelineViewState.topVisibleStatusId) {
       const anchor = scrollContainer.querySelector<HTMLElement>(
@@ -103,7 +105,7 @@
     scrollSaveTimer = setTimeout(() => {
       if (scrollContainer) {
         const topAnchor = getTopVisibleAnchor();
-        updateTimelineViewState($persistedState.config, {
+        updateTimelineViewState(timelineConfig, {
           scrollPosition: scrollContainer.scrollTop,
           topVisibleStatusId: topAnchor?.dataset.statusId,
           topVisibleStatusOffset: topAnchor
@@ -157,7 +159,7 @@
     if (!scrollContainer) return;
 
     const topAnchor = getTopVisibleAnchor();
-    updateTimelineViewState($persistedState.config, {
+    updateTimelineViewState(timelineConfig, {
       scrollPosition: scrollContainer.scrollTop,
       topVisibleStatusId: topAnchor?.dataset.statusId,
       topVisibleStatusOffset: topAnchor
@@ -170,7 +172,7 @@
   async function restoreCapturedAnchor() {
     if (!scrollContainer) return;
     await tick();
-    const timelineViewState = getTimelineViewState($persistedState.config);
+    const timelineViewState = getTimelineViewState(timelineConfig);
 
     const anchorId = timelineViewState.topVisibleStatusId;
     if (!anchorId) {

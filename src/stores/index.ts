@@ -6,6 +6,7 @@ export {
   lastFetchedAt,
   statusCount,
   canLoadMore,
+  activateTimeline,
   refreshTimeline,
   loadMoreTimeline,
   startAutoRefresh,

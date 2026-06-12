@@ -49,21 +49,28 @@ let strokeColor = NSColor(
 strokeColor.setStroke()
 
 let body = NSBezierPath()
-body.move(to: point(159, 249))
-body.curve(to: point(390, 256), controlPoint1: point(214, 160), controlPoint2: point(327, 159))
-body.curve(to: point(159, 263), controlPoint1: point(329, 352), controlPoint2: point(215, 352))
-body.curve(to: point(101, 197), controlPoint1: point(143, 238), controlPoint2: point(128, 219))
-body.curve(to: point(141, 276), controlPoint1: point(105, 230), controlPoint2: point(117, 255))
-body.curve(to: point(101, 344), controlPoint1: point(120, 291), controlPoint2: point(106, 313))
-body.curve(to: point(159, 263), controlPoint1: point(129, 321), controlPoint2: point(145, 301))
+body.move(to: point(154, 256))
+body.curve(to: point(398, 256), controlPoint1: point(218, 152), controlPoint2: point(330, 152))
+body.curve(to: point(154, 256), controlPoint1: point(330, 360), controlPoint2: point(218, 360))
 body.lineWidth = 30 * scale
 body.lineCapStyle = .round
 body.lineJoinStyle = .round
 body.stroke()
 
+let tail = NSBezierPath()
+tail.move(to: point(154, 256))
+tail.curve(to: point(94, 176), controlPoint1: point(126, 226), controlPoint2: point(105, 198))
+tail.curve(to: point(136, 256), controlPoint1: point(96, 210), controlPoint2: point(110, 238))
+tail.curve(to: point(94, 336), controlPoint1: point(110, 274), controlPoint2: point(96, 302))
+tail.curve(to: point(154, 256), controlPoint1: point(105, 314), controlPoint2: point(126, 286))
+tail.lineWidth = 30 * scale
+tail.lineCapStyle = .round
+tail.lineJoinStyle = .round
+tail.stroke()
+
 let eye = NSBezierPath()
-eye.appendArc(withCenter: point(338, 237), radius: 12 * scale, startAngle: 0, endAngle: 360)
-eye.lineWidth = 24 * scale
+eye.appendArc(withCenter: point(340, 238), radius: 8 * scale, startAngle: 0, endAngle: 360)
+eye.lineWidth = 16 * scale
 eye.lineCapStyle = .round
 eye.lineJoinStyle = .round
 eye.stroke()

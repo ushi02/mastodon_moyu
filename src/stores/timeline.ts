@@ -2,6 +2,7 @@
 
 import { writable, derived, get } from 'svelte/store';
 import { fetchTimeline, type MastodonStatus, type AppConfig, DEFAULT_CONFIG } from '../api';
+import { getTimelineStateKey } from './persistence';
 
 // ---- State ----
 export const statuses = writable<MastodonStatus[]>([]);
@@ -17,19 +18,51 @@ export const statusCount = derived(statuses, ($s) => $s.length);
 // ---- Auto-refresh timer ----
 let refreshTimer: ReturnType<typeof setInterval> | null = null;
 let currentConfig: Partial<AppConfig> = {};
+let currentTimelineKey = getTimelineStateKey(DEFAULT_CONFIG);
 
-function isSameTimelineContext(
-  previousConfig: Partial<AppConfig>,
-  nextConfig: Partial<AppConfig>
-): boolean {
-  const previous = { ...DEFAULT_CONFIG, ...previousConfig };
-  const next = { ...DEFAULT_CONFIG, ...nextConfig };
+interface TimelineCacheEntry {
+  statuses: MastodonStatus[];
+  canLoadMore: boolean;
+  lastFetchedAt: Date | null;
+}
 
-  return (
-    previous.instanceUrl === next.instanceUrl &&
-    previous.timelineType === next.timelineType &&
-    previous.accessToken === next.accessToken
-  );
+const timelineCache = new Map<string, TimelineCacheEntry>();
+
+function getCacheEntry(timelineKey: string): TimelineCacheEntry {
+  const existing = timelineCache.get(timelineKey);
+  if (existing) return existing;
+
+  const nextEntry = {
+    statuses: [],
+    canLoadMore: true,
+    lastFetchedAt: null,
+  };
+  timelineCache.set(timelineKey, nextEntry);
+
+  return nextEntry;
+}
+
+function updateCacheEntry(timelineKey: string, partial: Partial<TimelineCacheEntry>) {
+  const currentEntry = getCacheEntry(timelineKey);
+  const nextEntry = { ...currentEntry, ...partial };
+  timelineCache.set(timelineKey, nextEntry);
+
+  if (timelineKey === currentTimelineKey) {
+    statuses.set(nextEntry.statuses);
+    canLoadMore.set(nextEntry.canLoadMore);
+    lastFetchedAt.set(nextEntry.lastFetchedAt);
+  }
+}
+
+export function activateTimeline(config: Partial<AppConfig> = {}): void {
+  const timelineKey = getTimelineStateKey(config);
+  const entry = getCacheEntry(timelineKey);
+
+  currentConfig = config;
+  currentTimelineKey = timelineKey;
+  statuses.set(entry.statuses);
+  canLoadMore.set(entry.canLoadMore);
+  lastFetchedAt.set(entry.lastFetchedAt);
 }
 
 function mergeStatuses(
@@ -56,23 +89,26 @@ function mergeStatuses(
 export async function refreshTimeline(config: Partial<AppConfig> = {}): Promise<void> {
   const currentlyLoading = get(isLoading);
   if (currentlyLoading) return;
-  const previousConfig = currentConfig;
   currentConfig = config;
+  const timelineKey = getTimelineStateKey(config);
+  currentTimelineKey = timelineKey;
 
   isLoading.set(true);
   error.set(null);
 
   try {
     const data = await fetchTimeline(config);
-    const existingStatuses = get(statuses);
-    const shouldReplaceStatuses =
-      existingStatuses.length === 0 || !isSameTimelineContext(previousConfig, config);
+    const existingStatuses = getCacheEntry(timelineKey).statuses;
+    const shouldReplaceStatuses = existingStatuses.length === 0;
+    const nextStatuses = shouldReplaceStatuses ? data : mergeStatuses(data, existingStatuses);
+    const nextCanLoadMore = data.length >= ((config.limit ?? DEFAULT_CONFIG.limit));
+    const fetchedAt = new Date();
 
-    statuses.set(
-      shouldReplaceStatuses ? data : mergeStatuses(data, existingStatuses)
-    );
-    canLoadMore.set(data.length >= ((config.limit ?? DEFAULT_CONFIG.limit)));
-    lastFetchedAt.set(new Date());
+    updateCacheEntry(timelineKey, {
+      statuses: nextStatuses,
+      canLoadMore: nextCanLoadMore,
+      lastFetchedAt: fetchedAt,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     error.set(msg);
@@ -94,8 +130,13 @@ export async function loadMoreTimeline(): Promise<void> {
 
   try {
     const data = await fetchTimeline(currentConfig, { maxId: lastStatus.id });
-    statuses.set([...currentStatuses, ...data]);
-    canLoadMore.set(data.length >= ((currentConfig.limit ?? DEFAULT_CONFIG.limit)));
+    const nextStatuses = [...currentStatuses, ...data];
+    const nextCanLoadMore = data.length >= ((currentConfig.limit ?? DEFAULT_CONFIG.limit));
+
+    updateCacheEntry(currentTimelineKey, {
+      statuses: nextStatuses,
+      canLoadMore: nextCanLoadMore,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'Unknown error';
     error.set(msg);

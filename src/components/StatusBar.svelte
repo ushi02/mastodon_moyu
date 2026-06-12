@@ -4,7 +4,14 @@
    * timeline mode, and opacity control.
    */
   import { createEventDispatcher } from 'svelte';
-  import { persistedState, t, updateConfig, refreshTimeline, startAutoRefresh } from '../stores';
+  import {
+    persistedState,
+    t,
+    updateConfig,
+    activateTimeline,
+    refreshTimeline,
+    startAutoRefresh,
+  } from '../stores';
 
   const dispatch = createEventDispatcher();
 
@@ -29,6 +36,7 @@
 
     const nextConfig = { ...config, timelineType: nextTimeline };
     updateConfig({ timelineType: nextTimeline });
+    activateTimeline(nextConfig);
     await refreshTimeline(nextConfig);
     startAutoRefresh(nextConfig);
   }
