@@ -6,10 +6,9 @@ export {
   lastFetchedAt,
   statusCount,
   canLoadMore,
-  activateTimeline,
+  switchTimeline,
   refreshTimeline,
   loadMoreTimeline,
-  startAutoRefresh,
   stopAutoRefresh,
 } from './timeline';
 

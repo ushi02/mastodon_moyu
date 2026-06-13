@@ -8,9 +8,7 @@
     persistedState,
     t,
     updateConfig,
-    activateTimeline,
-    refreshTimeline,
-    startAutoRefresh,
+    switchTimeline,
   } from '../stores';
 
   const dispatch = createEventDispatcher();
@@ -36,9 +34,7 @@
 
     const nextConfig = { ...config, timelineType: nextTimeline };
     updateConfig({ timelineType: nextTimeline });
-    activateTimeline(nextConfig);
-    await refreshTimeline(nextConfig);
-    startAutoRefresh(nextConfig);
+    await switchTimeline(nextConfig);
   }
 </script>
 

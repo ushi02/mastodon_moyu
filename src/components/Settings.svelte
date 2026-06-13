@@ -22,8 +22,6 @@
   let activeSection: 'account' | 'appearance' | 'help' = initialSection;
   let validationMessage = '';
 
-  $: config = $persistedState.config;
-
   let instanceUrl = initialConfig.instanceUrl;
   let accessToken = initialConfig.accessToken;
   let timelineType = initialConfig.timelineType;
@@ -38,14 +36,6 @@
 
   const showCloseButton = mode === 'settings';
   $: isSetupMode = mode === 'setup';
-  $: if (activeSection === 'appearance') {
-    updateConfig({
-      themeMode,
-      locale,
-      fontScale,
-      accentColor,
-    });
-  }
 
   function normalizeInstanceUrl(url: string): string {
     const trimmed = url.trim().replace(/\/$/, '');

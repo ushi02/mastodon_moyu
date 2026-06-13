@@ -54,7 +54,7 @@ function updateCacheEntry(timelineKey: string, partial: Partial<TimelineCacheEnt
   }
 }
 
-export function activateTimeline(config: Partial<AppConfig> = {}): void {
+function activateTimeline(config: Partial<AppConfig> = {}): void {
   const timelineKey = getTimelineStateKey(config);
   const entry = getCacheEntry(timelineKey);
 
@@ -118,6 +118,15 @@ export async function refreshTimeline(config: Partial<AppConfig> = {}): Promise<
   }
 }
 
+/**
+ * Activate a timeline, fetch its latest posts, and restart auto-refresh.
+ */
+export async function switchTimeline(config: Partial<AppConfig> = {}): Promise<void> {
+  activateTimeline(config);
+  await refreshTimeline(config);
+  startAutoRefresh(config);
+}
+
 export async function loadMoreTimeline(): Promise<void> {
   if (get(isLoading) || get(isLoadingMore) || !get(canLoadMore)) return;
 
@@ -149,7 +158,7 @@ export async function loadMoreTimeline(): Promise<void> {
 /**
  * Start auto-refresh interval.
  */
-export function startAutoRefresh(config: Partial<AppConfig> = {}): void {
+function startAutoRefresh(config: Partial<AppConfig> = {}): void {
   stopAutoRefresh();
   const interval = (config.refreshInterval ?? DEFAULT_CONFIG.refreshInterval) * 1000;
   refreshTimer = setInterval(() => {

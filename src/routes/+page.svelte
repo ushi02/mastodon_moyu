@@ -15,7 +15,7 @@
   import Settings from '../components/Settings.svelte';
   import {
     refreshTimeline,
-    startAutoRefresh,
+    switchTimeline,
     stopAutoRefresh,
     persistedState,
     updatePersistedState,
@@ -312,8 +312,7 @@
     const config = getConfig();
 
     if ($persistedState.hasCompletedOnboarding && !(config.timelineType === 'home' && !config.accessToken)) {
-      await refreshTimeline(config);
-      startAutoRefresh(config);
+      await switchTimeline(config);
     } else {
       openSettings($persistedState.hasCompletedOnboarding ? 'settings' : 'setup', 'help');
     }
@@ -365,8 +364,7 @@
         updatePersistedState({ hasCompletedOnboarding: true });
         const config = getConfig();
         await registerConfiguredShortcut(config.globalShortcut);
-        await refreshTimeline(config);
-        startAutoRefresh(config);
+        await switchTimeline(config);
       }}
     />
   {:else}
